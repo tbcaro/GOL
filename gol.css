@@ -6,7 +6,28 @@
   box-sizing: border-box !important; /* So that border calculation is factored into size */
 }
 
+button {
+  font-size: 10pt;
+  border: 1px solid yellow;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:active {
+  background: yellow;
+  color: black;
+}
+
+button.selected {
+  background: yellow;
+  color: black;
+}
+
 #canvas {
   background: black;
   border: 1px solid yellow;
+}
+
+.control-btn {
+  font-size: 14pt;
 }

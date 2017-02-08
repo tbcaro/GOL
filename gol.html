@@ -12,41 +12,90 @@
 
     <link rel="stylesheet" href="./grid.css">
     <link rel="stylesheet" href="./gol.css">
+
+    <!-- Link to Google CDN jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="./gol.js" charset="utf-8"></script>
+
   </head>
   <body>
     <div class="container">
-      <div class="grid">
+      <div class="grid-row">
         <div class="col-3">
           <!-- Game controls -->
-          <div class="grid">
+          <div class="grid-row">
             <div class="col-12 text-center">
-              <h3>Game Controls</h3>
+              <button id="btn-newGame" class="control-btn">new game</button>
+            </div>
+          </div>
+
+          <div class="grid-row">
+            <div class="col-12 text-center">
+              <button id="btn-toggleRun" class="control-btn">stop</button>
             </div>
           </div>
 
           <!-- Interval Settings -->
-          <div class="grid">
+          <div class="grid-row">
             <div class="col-12 text-center">
-              <h3>Interval Settings</h3>
+              <h4>Interval</h4>
+            </div>
+          </div>
+
+          <div class="grid-row">
+            <div class="col-12 text-center">
+              <div class="button-group">
+                <button>.5s</button>
+                <button>1s</button>
+                <button class="selected">2s</button>
+                <button>5s</button>
+              </div>
             </div>
           </div>
 
           <!-- Cell Size Settings -->
-          <div class="grid">
+          <div class="grid-row">
             <div class="col-12 text-center">
-              <h3>Size Settings</h3>
+              <h4>Size</h4>
             </div>
           </div>
+
+          <div class="grid-row">
+            <div class="col-12 text-center">
+              <div class="button-group">
+                <button>10px</button>
+                <button>5px</button>
+                <button>4px</button>
+                <button class="selected">3px</button>
+                <button>2px</button>
+                <button>1px</button>
+              </div>
+            </div>
+          </div>
+
         </div>
         <div class="col-6 text-center">
           <canvas id="canvas" width="600" height="600"></canvas>
         </div>
         <div class="col-3">
           <!-- Game Statistics -->
-          <div class="grid">
+          <div class="grid-row">
             <div class="col-12 text-center">
-              <h3>Statistics</h3>
+              <h4>Statistics</h4>
+              <table>
+                <tr>
+                  <td class="text-right">generations:</td>
+                  <td id="stat-generations">0</td>
+                </tr>
+                <tr>
+                  <td class="text-right">total cells:</td>
+                  <td id="stat-totalCells">0</td>
+                </tr>
+                <tr>
+                  <td class="text-right">living cells:</td>
+                  <td id="stat-livingCells">0</td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>

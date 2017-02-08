@@ -3,12 +3,12 @@
   width: auto;
 }
 
-.grid {
+.grid-row {
   width: auto;
   padding: 10px;
 }
 
-.grid::after {
+.grid-row::after {
   content: "";
   display: block;
   clear: both;
