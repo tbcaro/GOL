@@ -1,0 +1,12 @@
+/* Elements */
+* {
+  font-family: courier;
+  background: black;
+  color: yellow;
+  box-sizing: border-box !important; /* So that border calculation is factored into size */
+}
+
+#canvas {
+  background: black;
+  border: 1px solid yellow;
+}
