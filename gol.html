@@ -31,7 +31,7 @@
 
           <div class="grid-row">
             <div class="col-12 text-center">
-              <button id="btn-toggleRun" class="control-btn">stop</button>
+              <button id="btn-togglePaused" class="control-btn">pause</button>
             </div>
           </div>
 
@@ -44,11 +44,11 @@
 
           <div class="grid-row">
             <div class="col-12 text-center">
-              <div class="button-group">
-                <button>.5s</button>
-                <button>1s</button>
-                <button class="selected">2s</button>
-                <button>5s</button>
+              <div id="btnGroup-interval" class="button-group">
+                <button data-interval=".5">.5s</button>
+                <button data-interval="1">1s</button>
+                <button class="selected" data-interval="2">2s</button>
+                <button data-interval="5">5s</button>
               </div>
             </div>
           </div>
@@ -62,13 +62,13 @@
 
           <div class="grid-row">
             <div class="col-12 text-center">
-              <div class="button-group">
-                <button>10px</button>
-                <button>5px</button>
-                <button>4px</button>
-                <button class="selected">3px</button>
-                <button>2px</button>
-                <button>1px</button>
+              <div id="btnGroup-size" class="button-group">
+                <button data-size="10">10px</button>
+                <button data-size="5">5px</button>
+                <button data-size="4">4px</button>
+                <button class="selected" data-size="3">3px</button>
+                <button data-size="2">2px</button>
+                <button data-size="1">1px</button>
               </div>
             </div>
           </div>
