@@ -19,7 +19,7 @@ function App(gol) {
   // TBC : Methods
   this.initialize = function() {
     this.elements.btnNewGame        = $('#btn-newGame');
-    this.elements.btnTogglePaused   = $('#btn-togglePaused');
+    this.elements.btnGameState      = $('#btn-gameState');
     this.elements.btnGroupInterval  = $('#btnGroup-interval');
     this.elements.btnGroupSize      = $('#btnGroup-size');
     this.elements.canvas            = $('#canvas');
@@ -27,13 +27,9 @@ function App(gol) {
     this.elements.totalCells        = $('#stat-totalCells');
     this.elements.livingCells       = $('#stat-livingCells');
 
-    this.elements.btnTogglePaused.setToPause = function() {
-      $(this).html('pause');
-    };
-
-    this.elements.btnTogglePaused.setToResume = function() {
-      $(this).html('resume');
-    };
+    this.elements.btnGameState.setToStart = function() { $(this).html('start'); };
+    this.elements.btnGameState.setToPause = function() { $(this).html('pause'); };
+    this.elements.btnGameState.setToResume = function() { $(this).html('resume'); };
 
 
     this.canvasManager = new CanvasManager({
@@ -52,17 +48,17 @@ function App(gol) {
         interval: app.getInterval(),
         size: app.elements.canvas.width / app.getSize()
       });
-      app.elements.btnTogglePaused.setToPause();
+      app.elements.btnGameState.setToStart();
     });
 
     // TBC : Pause button should pause or resume game based on state
-    this.elements.btnTogglePaused.on('click', function() {
-      if (app.gol.isPaused) {
-        app.gol.resume();
-        app.elements.btnTogglePaused.setToPause();
+    this.elements.btnGameState.on('click', function() {
+      if (app.gol.gameState === app.gol.GAME_STATES.NEW_GAME || app.gol.gameState === app.gol.GAME_STATES.PAUSED) {
+        app.gol.run();
+        app.elements.btnGameState.setToPause();
       } else {
         app.gol.pause();
-        app.elements.btnTogglePaused.setToResume();
+        app.elements.btnGameState.setToResume();
       }
     });
 
@@ -115,23 +111,45 @@ function CanvasManager(options) {
   events and serve as the game's logical manager.
 */
 function GameOfLife(options) {
-  this.isPaused = false;
+  this.GAME_STATES = {
+    NEW_GAME: 'new-game',
+    RUNNING: 'running',
+    PAUSED: 'paused'
+  }
 
-  this.initialize = function() {
+  this.size = options.size || 300;
+  this.interval = options.interval || 1000;
+  this.gameState = this.GAME_STATES.NEW_GAME;
+  this.grid = [];
+  this.intervalId;
 
+  this.newGame = function() {
+    for (var i = 0; i < this.size; i++) {
+      var columns = [];
+
+      for (var j = 0; j < this.size; j++) {
+        var cell = columns[j];
+        cell = new Cell();
+        cell = randomizeInitialState();
+      }
+
+      this.grid.push(columns);
+    }
   }
 
   this.run = function() {
-
+    this.gameState = this.GAME_STATES.RUNNING
+    this.intervalId = setInterval(this.simulate, this.interval);
   }
 
-  this.pause = function() { this.isPaused = true; }
+  this.pause = function() {
+    this.gameState = this.GAME_STATES.PAUSED;
+    clearInterval(this.intervalId);
+  }
 
-  this.resume = function() { this.isPaused = false; }
-
-  // TBC : Auto-execute on instantiation
-  this.initialize();
-  this.run();
+  this.simulate = function() {
+    console.log('simulate occurred...');
+  }
 }
 
 /*
@@ -141,5 +159,23 @@ function GameOfLife(options) {
   this class of objects.
 */
 function Cell() {
+  this.age = 0;
+  this.isAlive = false;
 
+  this.generate = function() {
+    this.isAlive = true;
+  }
+
+  this.survive = function() {
+    this.age++;
+  }
+
+  this.die = function() {
+    this.age = 0;
+    this.isAlive = false;
+  }
+
+  this.randomizeInitialState = function() {
+    Math.random() % 2 == 0 ? this.generate() : this.die();
+  }
 }
