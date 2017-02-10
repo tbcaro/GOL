@@ -33,7 +33,8 @@ function App(gol) {
 
 
     this.canvasManager = new CanvasManager({
-      canvas: this.elements.canvas[0] // TBC : [0] removes jQuery wrapper
+      canvas: this.elements.canvas[0], // TBC : [0] removes jQuery wrapper
+      size: this.getSize()
     });
 
     this.bindEventHandlers();
@@ -48,6 +49,7 @@ function App(gol) {
         interval: app.getInterval(),
         size: app.elements.canvas.width / app.getSize()
       });
+      app.gol.newGame();
       app.elements.btnGameState.setToStart();
     });
 
@@ -65,6 +67,27 @@ function App(gol) {
     // TBC : Clicking an option in a button-group should set the appropriate button selected
     $(document).on('click', '.button-group button', function() {
       app.selectGroupButton($(this));
+    });
+
+    $(document).on('gol:newGame', function() {
+      app.drawCells();
+    });
+
+    $(document).on('gol:nextGeneration', function() {
+      app.drawCells();
+    });
+  }
+
+  this.drawCells = function() {
+    var app = this;
+
+    app.canvasManager.clearCanvas();
+    app.gol.rows.forEach(function(column, rowIdx) {
+      column.forEach(function(cell, colIdx) {
+        if (cell.isAlive) {
+          app.canvasManager.drawCell(rowIdx, colIdx);
+        }
+      });
     });
   }
 
@@ -98,8 +121,32 @@ function App(gol) {
 function CanvasManager(options) {
   this.canvas = options.canvas;
   this.context = this.canvas.getContext('2d');
-  this.context.fillStyle = options.color || 'yellow';
 
+  this.size = options.size;
+  this.cellOffset = options.cellOffset || 1;
+  this.cellColor = options.cellColor || 'yellow';
+  this.backgroundColor = options.backgroundColor || 'black';
+
+  this.drawCell = function(row, column) {
+    this.context.fillStyle = this.cellColor;
+    var position = {
+      x: column * this.size + this.cellOffset,
+      y: row * this.size + this.cellOffset
+    }
+
+    this.context.moveTo(position.x, position.y);
+    this.context.fillRect(
+      position.x,
+      position.y,
+      this.size - this.cellOffset,
+      this.size - this.cellOffset
+    );
+  }
+
+  this.clearCanvas = function() {
+    this.context.fillStyle = this.backgroundColor;
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
 }
 
 /*
@@ -120,26 +167,33 @@ function GameOfLife(options) {
   this.size = options.size || 300;
   this.interval = options.interval || 1000;
   this.gameState = this.GAME_STATES.NEW_GAME;
-  this.grid = [];
+  this.rows = [];
   this.intervalId;
+  this.statistics = {
+    generations: 0,
+    totalCells: 0,
+    livingCells: 0
+  }
 
   this.newGame = function() {
     for (var i = 0; i < this.size; i++) {
       var columns = [];
 
       for (var j = 0; j < this.size; j++) {
-        var cell = columns[j];
-        cell = new Cell();
-        cell = randomizeInitialState();
+        var cell = new Cell();
+        cell.randomizeInitialState();
+        columns[j] = cell;
       }
 
-      this.grid.push(columns);
+      this.rows.push(columns);
     }
+
+    $(document).trigger('gol:newGame');
   }
 
   this.run = function() {
     this.gameState = this.GAME_STATES.RUNNING
-    this.intervalId = setInterval(this.simulate, this.interval);
+    this.intervalId = setInterval(this.nextGeneration, this.interval);
   }
 
   this.pause = function() {
@@ -147,8 +201,8 @@ function GameOfLife(options) {
     clearInterval(this.intervalId);
   }
 
-  this.simulate = function() {
-    console.log('simulate occurred...');
+  this.nextGeneration = function() {
+    $(document).trigger('gol:nextGeneration');
   }
 }
 
@@ -176,6 +230,9 @@ function Cell() {
   }
 
   this.randomizeInitialState = function() {
-    Math.random() % 2 == 0 ? this.generate() : this.die();
+    // TBC : percentChance represents what percent chance the cell has to become animated on inital load
+    var percentChance = 10;
+    var random = Math.floor(Math.random() * 100);
+    random < percentChance ? this.generate() : this.die();
   }
 }
