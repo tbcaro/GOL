@@ -39,7 +39,7 @@ function App(gol) {
     self.elements.btnNewGame.on('click', function() {
       self.gol = new GameOfLife({
         interval: self.getInterval(),
-        size: self.elements.canvas.width / self.getSize()
+        size: self.elements.canvas[0].width / self.getSize()
       });
 
       self.canvasManager = new CanvasManager({
@@ -96,8 +96,11 @@ function App(gol) {
           label = self.gol.statistics[key].label,
           value = self.gol.statistics[key].value;
 
+      if (typeof value === 'number') {
+        value = value.toLocaleString();
+      }
       statRow.append($('<td>').html(label + ':').addClass('text-right'));
-      statRow.append($('<td>').html(value));
+      statRow.append($('<td>').html(value).addClass('text-left'));
 
       self.elements.statsTable.append(statRow);
     }
@@ -211,22 +214,24 @@ function GameOfLife(options) {
       for (var j = 0; j < self.size; j++) {
         var cell = new Cell();
         cell.randomizeInitialState();
+
+        if (cell.isAlive) {
+          self.statistics.livingCells.value++;
+        }
+
         columns[j] = cell;
       }
 
       self.rows.push(columns);
     }
 
+    self.statistics.totalCells.value = self.size * self.size;
     $(document).trigger('gol:seed');
   }
 
   self.run = function() {
-    var gol = self;
-
     self.gameState = self.GAME_STATES.RUNNING
-    self.intervalId = setInterval(function(){
-      gol.tick(gol);
-    }, self.interval);
+    self.intervalId = setInterval(self.tick, self.interval);
   }
 
   self.pause = function() {
@@ -234,12 +239,65 @@ function GameOfLife(options) {
     clearInterval(self.intervalId);
   }
 
-  self.tick = function(gol) {
-    var statistics = gol.statistics;
+  self.tick = function() {
+    self.statistics.livingCells.value = 0;
 
-    gol.
-    statistics.generations.value++;
+    self.rows.forEach(function(columns, rowIdx) {
+      columns.forEach(function(cell, colIdx) {
+        var livingNeighbors = self.countLivingNeighbors(rowIdx, colIdx);
+
+        if (cell.isAlive) {
+          if (livingNeighbors < 2 || livingNeighbors > 3) {
+            cell.die();
+          } else {
+            cell.survive();
+          }
+        } else if (livingNeighbors === 3) {
+          cell.generate();
+        }
+
+        if (cell.isAlive) {
+          self.statistics.livingCells.value++;
+        }
+      });
+    });
+
+    self.statistics.generations.value++;
     $(document).trigger('gol:tick');
+  }
+
+  self.countLivingNeighbors = function(rowIdx, colIdx) {
+    var offsets = {
+          NW: { rowOffset: -1, colOffset: -1 },
+          N: { rowOffset: -1, colOffset: 0 },
+          NE: { rowOffset: -1, colOffset: 1 },
+          E: { rowOffset: 0, colOffset: 1 },
+          SE: { rowOffset: 1, colOffset: 1 },
+          S: { rowOffset: 1, colOffset: 0 },
+          SW: { rowOffset: 1, colOffset: -1 },
+          W: { rowOffset: 0, colOffset: -1 }
+        },
+        count = 0;
+
+    for (direction in offsets) {
+      var rowOffset = offsets[direction].rowOffset,
+          colOffset = offsets[direction].colOffset;
+
+      if (
+        rowIdx + rowOffset >= 0 &&
+        colIdx + colOffset >= 0 &&
+        rowIdx + rowOffset < self.size &&
+        colIdx + colOffset < self.size
+      ) {
+          var neighbor = self.rows[rowIdx + rowOffset][colIdx + colOffset];
+
+          if (neighbor.isAlive) {
+            count++;
+          }
+      }
+    }
+
+    return count;
   }
 
   return self;
