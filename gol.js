@@ -47,7 +47,7 @@ function App(gol) {
         size: app.getSize()
       });
 
-      app.gol.newGame();
+      app.gol.seed();
       app.elements.btnGameState.setToStart();
     });
 
@@ -67,12 +67,12 @@ function App(gol) {
       app.selectGroupButton($(this));
     });
 
-    $(document).on('gol:newGame', function() {
+    $(document).on('gol:seed', function() {
       app.drawCells();
       app.reportStats();
     });
 
-    $(document).on('gol:nextGeneration', function() {
+    $(document).on('gol:tick', function() {
       app.drawCells();
       app.reportStats();
     });
@@ -198,7 +198,7 @@ function GameOfLife(options) {
     }
   }
 
-  this.newGame = function() {
+  this.seed = function() {
     for (var i = 0; i < this.size; i++) {
       var columns = [];
 
@@ -211,12 +211,12 @@ function GameOfLife(options) {
       this.rows.push(columns);
     }
 
-    $(document).trigger('gol:newGame');
+    $(document).trigger('gol:seed');
   }
 
   this.run = function() {
     this.gameState = this.GAME_STATES.RUNNING
-    this.intervalId = setInterval(this.nextGeneration, this.interval);
+    this.intervalId = setInterval(this.tick, this.interval);
   }
 
   this.pause = function() {
@@ -224,8 +224,10 @@ function GameOfLife(options) {
     clearInterval(this.intervalId);
   }
 
-  this.nextGeneration = function() {
-    $(document).trigger('gol:nextGeneration');
+  this.tick = function() {
+    var statistics = GameOfLife.statistics;
+    statistics.generations.value++;
+    $(document).trigger('gol:tick');
   }
 }
 
