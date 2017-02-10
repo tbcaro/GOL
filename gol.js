@@ -23,19 +23,11 @@ function App(gol) {
     this.elements.btnGroupInterval  = $('#btnGroup-interval');
     this.elements.btnGroupSize      = $('#btnGroup-size');
     this.elements.canvas            = $('#canvas');
-    this.elements.generations       = $('#stat-generations');
-    this.elements.totalCells        = $('#stat-totalCells');
-    this.elements.livingCells       = $('#stat-livingCells');
+    this.elements.statsTable        = $('#stats-table');
 
     this.elements.btnGameState.setToStart = function() { $(this).html('start'); };
     this.elements.btnGameState.setToPause = function() { $(this).html('pause'); };
     this.elements.btnGameState.setToResume = function() { $(this).html('resume'); };
-
-
-    this.canvasManager = new CanvasManager({
-      canvas: this.elements.canvas[0], // TBC : [0] removes jQuery wrapper
-      size: this.getSize()
-    });
 
     this.bindEventHandlers();
   }
@@ -49,6 +41,12 @@ function App(gol) {
         interval: app.getInterval(),
         size: app.elements.canvas.width / app.getSize()
       });
+
+      app.canvasManager = new CanvasManager({
+        canvas: app.elements.canvas[0], // TBC : [0] removes jQuery wrapper
+        size: app.getSize()
+      });
+
       app.gol.newGame();
       app.elements.btnGameState.setToStart();
     });
@@ -71,10 +69,12 @@ function App(gol) {
 
     $(document).on('gol:newGame', function() {
       app.drawCells();
+      app.reportStats();
     });
 
     $(document).on('gol:nextGeneration', function() {
       app.drawCells();
+      app.reportStats();
     });
   }
 
@@ -89,6 +89,20 @@ function App(gol) {
         }
       });
     });
+  }
+
+  this.reportStats = function() {
+    this.elements.statsTable.empty();
+    for(key in this.gol.statistics) {
+      var statRow = $('<tr>'),
+          label = this.gol.statistics[key].label,
+          value = this.gol.statistics[key].value;
+
+      statRow.append($('<td>').html(label + ':').addClass('text-right'));
+      statRow.append($('<td>').html(value));
+
+      this.elements.statsTable.append(statRow);
+    }
   }
 
   this.selectGroupButton = function(button) {
@@ -123,7 +137,7 @@ function CanvasManager(options) {
   this.context = this.canvas.getContext('2d');
 
   this.size = options.size;
-  this.cellOffset = options.cellOffset || 1;
+  this.size === 1 ? this.cellOffset = 0 : this.cellOffset = this.size / 5;
   this.cellColor = options.cellColor || 'yellow';
   this.backgroundColor = options.backgroundColor || 'black';
 
@@ -164,15 +178,24 @@ function GameOfLife(options) {
     PAUSED: 'paused'
   }
 
-  this.size = options.size || 300;
+  this.size = options.size || 600;
   this.interval = options.interval || 1000;
   this.gameState = this.GAME_STATES.NEW_GAME;
   this.rows = [];
   this.intervalId;
   this.statistics = {
-    generations: 0,
-    totalCells: 0,
-    livingCells: 0
+    generations: {
+      label: 'generations',
+      value: 0
+    },
+    totalCells:  {
+      label: 'total cells',
+      value: 0
+    },
+    livingCells:  {
+      label: 'living cells',
+      value: 0
+    }
   }
 
   this.newGame = function() {
