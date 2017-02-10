@@ -11,101 +11,99 @@ $(document).ready(function() {
   and correlating the underlying game respresentation to the GUI.
 */
 function App(gol) {
+  var self = { };
+
   // TBC : Properties
-  this.gol;
-  this.canvasManager;
-  this.elements = { };
+  self.gol;
+  self.canvasManager;
+  self.elements = { };
 
   // TBC : Methods
-  this.initialize = function() {
-    this.elements.btnNewGame        = $('#btn-newGame');
-    this.elements.btnGameState      = $('#btn-gameState');
-    this.elements.btnGroupInterval  = $('#btnGroup-interval');
-    this.elements.btnGroupSize      = $('#btnGroup-size');
-    this.elements.canvas            = $('#canvas');
-    this.elements.statsTable        = $('#stats-table');
+  self.initialize = function() {
+    self.elements.btnNewGame        = $('#btn-newGame');
+    self.elements.btnGameState      = $('#btn-gameState');
+    self.elements.btnGroupInterval  = $('#btnGroup-interval');
+    self.elements.btnGroupSize      = $('#btnGroup-size');
+    self.elements.canvas            = $('#canvas');
+    self.elements.statsTable        = $('#stats-table');
 
-    this.elements.btnGameState.setToStart = function() { $(this).html('start'); };
-    this.elements.btnGameState.setToPause = function() { $(this).html('pause'); };
-    this.elements.btnGameState.setToResume = function() { $(this).html('resume'); };
+    self.elements.btnGameState.setToStart = function() { $(this).html('start'); };
+    self.elements.btnGameState.setToPause = function() { $(this).html('pause'); };
+    self.elements.btnGameState.setToResume = function() { $(this).html('resume'); };
 
-    this.bindEventHandlers();
+    self.bindEventHandlers();
   }
 
-  this.bindEventHandlers = function() {
-    var app = this;
-
+  self.bindEventHandlers = function() {
     // TBC : New Game loads new game instance and starts it
-    this.elements.btnNewGame.on('click', function() {
-      app.gol = new GameOfLife({
-        interval: app.getInterval(),
-        size: app.elements.canvas.width / app.getSize()
+    self.elements.btnNewGame.on('click', function() {
+      self.gol = new GameOfLife({
+        interval: self.getInterval(),
+        size: self.elements.canvas.width / self.getSize()
       });
 
-      app.canvasManager = new CanvasManager({
-        canvas: app.elements.canvas[0], // TBC : [0] removes jQuery wrapper
-        size: app.getSize()
+      self.canvasManager = new CanvasManager({
+        canvas: self.elements.canvas[0], // TBC : [0] removes jQuery wrselfer
+        size: self.getSize()
       });
 
-      app.gol.seed();
-      app.elements.btnGameState.setToStart();
+      self.gol.seed();
+      self.elements.btnGameState.setToStart();
     });
 
     // TBC : Pause button should pause or resume game based on state
-    this.elements.btnGameState.on('click', function() {
-      if (app.gol.gameState === app.gol.GAME_STATES.NEW_GAME || app.gol.gameState === app.gol.GAME_STATES.PAUSED) {
-        app.gol.run();
-        app.elements.btnGameState.setToPause();
+    self.elements.btnGameState.on('click', function() {
+      if (self.gol.gameState === self.gol.GAME_STATES.NEW_GAME || self.gol.gameState === self.gol.GAME_STATES.PAUSED) {
+        self.gol.run();
+        self.elements.btnGameState.setToPause();
       } else {
-        app.gol.pause();
-        app.elements.btnGameState.setToResume();
+        self.gol.pause();
+        self.elements.btnGameState.setToResume();
       }
     });
 
     // TBC : Clicking an option in a button-group should set the appropriate button selected
     $(document).on('click', '.button-group button', function() {
-      app.selectGroupButton($(this));
+      self.selectGroupButton($(this));
     });
 
     $(document).on('gol:seed', function() {
-      app.drawCells();
-      app.reportStats();
+      self.drawCells();
+      self.reportStats();
     });
 
     $(document).on('gol:tick', function() {
-      app.drawCells();
-      app.reportStats();
+      self.drawCells();
+      self.reportStats();
     });
   }
 
-  this.drawCells = function() {
-    var app = this;
-
-    app.canvasManager.clearCanvas();
-    app.gol.rows.forEach(function(column, rowIdx) {
+  self.drawCells = function() {
+    self.canvasManager.clearCanvas();
+    self.gol.rows.forEach(function(column, rowIdx) {
       column.forEach(function(cell, colIdx) {
         if (cell.isAlive) {
-          app.canvasManager.drawCell(rowIdx, colIdx);
+          self.canvasManager.drawCell(rowIdx, colIdx);
         }
       });
     });
   }
 
-  this.reportStats = function() {
-    this.elements.statsTable.empty();
-    for(key in this.gol.statistics) {
+  self.reportStats = function() {
+    self.elements.statsTable.empty();
+    for(key in self.gol.statistics) {
       var statRow = $('<tr>'),
-          label = this.gol.statistics[key].label,
-          value = this.gol.statistics[key].value;
+          label = self.gol.statistics[key].label,
+          value = self.gol.statistics[key].value;
 
       statRow.append($('<td>').html(label + ':').addClass('text-right'));
       statRow.append($('<td>').html(value));
 
-      this.elements.statsTable.append(statRow);
+      self.elements.statsTable.append(statRow);
     }
   }
 
-  this.selectGroupButton = function(button) {
+  self.selectGroupButton = function(button) {
     var btnGroup = button.closest('.button-group');
     var selected = btnGroup.find('.selected');
 
@@ -114,15 +112,17 @@ function App(gol) {
   }
 
   // TBC : Getters / Setters
-  this.getInterval = function() {
-    var selected = this.elements.btnGroupInterval.find('.selected');
+  self.getInterval = function() {
+    var selected = self.elements.btnGroupInterval.find('.selected');
     return Number.parseInt(selected.data('interval'));
   }
 
-  this.getSize = function() {
-    var selected = this.elements.btnGroupSize.find('.selected');
+  self.getSize = function() {
+    var selected = self.elements.btnGroupSize.find('.selected');
     return Number.parseInt(selected.data('size'));
   }
+
+  return self;
 }
 
 /*
@@ -133,34 +133,38 @@ function App(gol) {
 */
 
 function CanvasManager(options) {
-  this.canvas = options.canvas;
-  this.context = this.canvas.getContext('2d');
+  var self = { };
 
-  this.size = options.size;
-  this.size === 1 ? this.cellOffset = 0 : this.cellOffset = this.size / 5;
-  this.cellColor = options.cellColor || 'yellow';
-  this.backgroundColor = options.backgroundColor || 'black';
+  self.canvas = options.canvas;
+  self.context = self.canvas.getContext('2d');
 
-  this.drawCell = function(row, column) {
-    this.context.fillStyle = this.cellColor;
+  self.size = options.size;
+  self.size === 1 ? self.cellOffset = 0 : self.cellOffset = self.size / 5;
+  self.cellColor = options.cellColor || 'yellow';
+  self.backgroundColor = options.backgroundColor || 'black';
+
+  self.drawCell = function(row, column) {
+    self.context.fillStyle = self.cellColor;
     var position = {
-      x: column * this.size + this.cellOffset,
-      y: row * this.size + this.cellOffset
+      x: column * self.size + self.cellOffset,
+      y: row * self.size + self.cellOffset
     }
 
-    this.context.moveTo(position.x, position.y);
-    this.context.fillRect(
+    self.context.moveTo(position.x, position.y);
+    self.context.fillRect(
       position.x,
       position.y,
-      this.size - this.cellOffset,
-      this.size - this.cellOffset
+      self.size - self.cellOffset,
+      self.size - self.cellOffset
     );
   }
 
-  this.clearCanvas = function() {
-    this.context.fillStyle = this.backgroundColor;
-    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  self.clearCanvas = function() {
+    self.context.fillStyle = self.backgroundColor;
+    self.context.fillRect(0, 0, self.canvas.width, self.canvas.height);
   }
+
+  return self;
 }
 
 /*
@@ -172,18 +176,20 @@ function CanvasManager(options) {
   events and serve as the game's logical manager.
 */
 function GameOfLife(options) {
-  this.GAME_STATES = {
+  var self = { };
+
+  self.GAME_STATES = {
     NEW_GAME: 'new-game',
     RUNNING: 'running',
     PAUSED: 'paused'
   }
 
-  this.size = options.size || 600;
-  this.interval = options.interval || 1000;
-  this.gameState = this.GAME_STATES.NEW_GAME;
-  this.rows = [];
-  this.intervalId;
-  this.statistics = {
+  self.size = options.size || 600;
+  self.interval = options.interval || 1000;
+  self.gameState = self.GAME_STATES.NEW_GAME;
+  self.rows = [];
+  self.intervalId;
+  self.statistics = {
     generations: {
       label: 'generations',
       value: 0
@@ -198,37 +204,45 @@ function GameOfLife(options) {
     }
   }
 
-  this.seed = function() {
-    for (var i = 0; i < this.size; i++) {
+  self.seed = function() {
+    for (var i = 0; i < self.size; i++) {
       var columns = [];
 
-      for (var j = 0; j < this.size; j++) {
+      for (var j = 0; j < self.size; j++) {
         var cell = new Cell();
         cell.randomizeInitialState();
         columns[j] = cell;
       }
 
-      this.rows.push(columns);
+      self.rows.push(columns);
     }
 
     $(document).trigger('gol:seed');
   }
 
-  this.run = function() {
-    this.gameState = this.GAME_STATES.RUNNING
-    this.intervalId = setInterval(this.tick, this.interval);
+  self.run = function() {
+    var gol = self;
+
+    self.gameState = self.GAME_STATES.RUNNING
+    self.intervalId = setInterval(function(){
+      gol.tick(gol);
+    }, self.interval);
   }
 
-  this.pause = function() {
-    this.gameState = this.GAME_STATES.PAUSED;
-    clearInterval(this.intervalId);
+  self.pause = function() {
+    self.gameState = self.GAME_STATES.PAUSED;
+    clearInterval(self.intervalId);
   }
 
-  this.tick = function() {
-    var statistics = GameOfLife.statistics;
+  self.tick = function(gol) {
+    var statistics = gol.statistics;
+
+    gol.
     statistics.generations.value++;
     $(document).trigger('gol:tick');
   }
+
+  return self;
 }
 
 /*
@@ -238,26 +252,30 @@ function GameOfLife(options) {
   this class of objects.
 */
 function Cell() {
-  this.age = 0;
-  this.isAlive = false;
+  var self = { };
 
-  this.generate = function() {
-    this.isAlive = true;
+  self.age = 0;
+  self.isAlive = false;
+
+  self.generate = function() {
+    self.isAlive = true;
   }
 
-  this.survive = function() {
-    this.age++;
+  self.survive = function() {
+    self.age++;
   }
 
-  this.die = function() {
-    this.age = 0;
-    this.isAlive = false;
+  self.die = function() {
+    self.age = 0;
+    self.isAlive = false;
   }
 
-  this.randomizeInitialState = function() {
+  self.randomizeInitialState = function() {
     // TBC : percentChance represents what percent chance the cell has to become animated on inital load
     var percentChance = 10;
     var random = Math.floor(Math.random() * 100);
-    random < percentChance ? this.generate() : this.die();
+    random < percentChance ? self.generate() : self.die();
   }
+
+  return self;
 }
