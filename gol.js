@@ -17,7 +17,21 @@ function App(gol) {
   self.gol;
   self.elements = { };
   self.context = { };
-  self.colors = { cell: 'yellow', background: 'black' };
+  //self.colors = { cell: 'yellow', background: 'black' };
+  self.colors = {
+    cell: {
+      r: 255,
+      g: 255,
+      b: 0,
+      a: 1
+    },
+    background: {
+      r: 0,
+      g: 0,
+      b: 0,
+      a: 0
+    }
+  };
 
   // TBC : Methods
   self.initialize = function() {
@@ -101,9 +115,13 @@ function App(gol) {
       cellOffset = size / 5;
     }
 
-    self.context.fillStyle = self.colors.cell;
     self.context.beginPath();
     self.gol.eachCell(function(cell) {
+      var color = self.clone(self.colors.cell);
+
+      color.g -= cell.age * 3;
+      self.context.fillStyle = self.toRGBAString(color);
+
       if(cell.isAlive()) {
         self.context.fillRect(
           cell.position.col * size + cellOffset,
@@ -117,7 +135,7 @@ function App(gol) {
   }
 
   self.clearCanvas = function() {
-    self.context.fillStyle = self.colors.background;
+    self.context.fillStyle = self.toRGBAString(self.colors.background);
     self.context.clearRect(0, 0, self.elements.canvas[0].width, self.elements.canvas[0].height);
   }
 
@@ -198,6 +216,18 @@ function App(gol) {
       row: Math.floor(y / self.getSize()),
       col: Math.floor(x / self.getSize())
     }
+  }
+
+  self.toRGBAString = function(color) {
+    return 'RGBA(' + color.r + ',' + color.g + ',' + color.b + ',' + color.a + ')';
+  }
+
+  self.clone = function(o) {
+    var copy = o.constructor();
+    for (var key in o) {
+        if (o.hasOwnProperty(key)) copy[key] = o[key];
+    }
+    return copy;
   }
 
   // TBC : Getters / Setters
