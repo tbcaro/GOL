@@ -27,6 +27,7 @@ function App(gol) {
     self.elements.btnGroupSize      = $('#btnGroup-size');
     self.elements.canvas            = $('#canvas');
     self.elements.statsTable        = $('#stats-table');
+    self.elements.cellDetailsTable  = $('#cell-details-table');
 
     self.elements.btnGameState.setToStart = function() { $(this).html('start'); };
     self.elements.btnGameState.setToPause = function() { $(this).html('pause'); };
@@ -58,6 +59,19 @@ function App(gol) {
       } else {
         self.gol.pause();
         self.elements.btnGameState.setToResume();
+      }
+    });
+
+    self.elements.canvas.on('click', function(event) {
+      var canvasPosition = self.toCanvasPos(event.clientX, event.clientY);
+
+      if (self.gol) {
+        var gridPosition = self.toGridPos(canvasPosition.x, canvasPosition.y),
+            cell = self.gol.rows[gridPosition.row][gridPosition.col];
+
+        self.reportCellDetails(cell, canvasPosition);
+      } else {
+        alert('Please start a game');
       }
     });
 
@@ -124,12 +138,66 @@ function App(gol) {
     }
   }
 
+  self.reportCellDetails = function(cell, canvasPosition) {
+    self.elements.cellDetailsTable.empty();
+
+    var details = {
+      canvasPosition: {
+        label: 'Canvas Position',
+        value: 'x:' + canvasPosition.x + ', y:' + canvasPosition.y
+      },
+      gridPosition: {
+        label: 'Grid Position',
+        value: '[' + cell.position.row + ',' + cell.position.col + ']'
+      },
+      age: {
+        label: 'Age',
+        value: cell.age.toString()
+      },
+      state: {
+        label: 'State',
+        value: (cell.state === cell.STATES.ALIVE) ? 'ALIVE' : 'DEAD'
+      },
+      nextState: {
+        label: 'Next State',
+        value: (cell.nextState === cell.STATES.ALIVE) ? 'ALIVE' : 'DEAD'
+      }
+    }
+
+    for(key in details) {
+      var row = $('<tr>'),
+          label = details[key].label,
+          value = details[key].value;
+
+      row.append($('<td>').html(label + ':').addClass('text-right'));
+      row.append($('<td>').html(value).addClass('text-left'));
+
+      self.elements.cellDetailsTable.append(row);
+    }
+  }
+
   self.selectGroupButton = function(button) {
     var btnGroup = button.closest('.button-group');
     var selected = btnGroup.find('.selected');
 
     selected.removeClass('selected');
     button.addClass('selected');
+  }
+
+  self.toCanvasPos = function(x, y) {
+    var canvasBoundary = self.elements.canvas[0].getBoundingClientRect();
+
+    return {
+      x: x - canvasBoundary.left,
+      y: y - canvasBoundary.top
+    }
+  }
+
+  self.toGridPos = function(x, y) {
+    return {
+      row: Math.floor(y / self.getSize()),
+      col: Math.floor(x / self.getSize())
+    }
   }
 
   // TBC : Getters / Setters
@@ -328,13 +396,11 @@ function Cell() {
 
   self.liveNext = function() { self.nextState = self.STATES.ALIVE; }
 
-  self.age = function() { self.age++; }
-
   self.dieNext = function() { self.nextState = self.STATES.DEAD; }
 
   self.survive = function() {
     self.liveNext();
-    self.age();
+    self.age++;
   }
 
   self.die = function() {

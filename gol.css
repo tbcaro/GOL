@@ -26,6 +26,7 @@ button.selected {
 #canvas {
   background: black;
   border: 1px solid yellow;
+  cursor: pointer;
 }
 
 .control-btn {
