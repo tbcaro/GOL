@@ -281,7 +281,7 @@ function GameOfLife() {
         cell.position.col = j;
 
         // TBC : Seed dead cell border
-        if (i === 0 || j === 0 || i === self.size || j === self.size) {
+        if (i === 0 || j === 0 || i === self.size - 1 || j === self.size - 1) {
           cell.die();
         } else {
           self.randomizeInitialCellState(cell);
@@ -347,8 +347,12 @@ function GameOfLife() {
 
   self.updateCellState = function(cell) {
     self.stats.livingCells.value = 0;
-    cell.state = cell.nextState;
-    if (cell.isAlive()) self.stats.livingCells.value++;
+    if (cell.isAlive()) {
+      cell.doesLiveNext() ? cell.incrementAge() : cell.die();
+      self.stats.livingCells.value++;
+    } else if (cell.doesLiveNext()){
+      cell.live();
+    }
   }
 
   self.determineNextCellState = function(cell) {
@@ -392,21 +396,22 @@ function Cell() {
 
   self.isAlive = function() { return (self.state === self.STATES.ALIVE) ? true : false }
 
+  self.doesLiveNext = function() { return (self.nextState === self.STATES.ALIVE) ? true : false }
+
   self.live = function() { self.state = self.STATES.ALIVE; }
 
   self.liveNext = function() { self.nextState = self.STATES.ALIVE; }
 
   self.dieNext = function() { self.nextState = self.STATES.DEAD; }
 
-  self.survive = function() {
-    self.liveNext();
-    self.age++;
-  }
-
   self.die = function() {
     self.state = self.STATES.DEAD;
-    self.age = 0;
+    self.resetAge();
   }
+
+  self.incrementAge = function() { self.age++; }
+
+  self.resetAge = function() { self.age = 0; }
 
   return self;
 }
