@@ -44,7 +44,8 @@ function App(gol) {
 
       self.gol.seed({
         interval: self.getInterval(),
-        size: self.elements.canvas[0].width / self.getSize()
+        size: self.elements.canvas[0].width / self.getSize(),
+        cellGenerationChance: 50
       });
       self.elements.btnGameState.setToStart();
     });
