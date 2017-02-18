@@ -6,18 +6,19 @@ $(document).ready(function() {
 /*
   TBC : The App object will be responsible for managing the application.
 
-  It will be responsible for handling page inputs and handling page elements.
-  It will also be responsible for handling events or data from the GameOfLife object,
-  and correlating the underlying game respresentation to the GUI.
+  Its roles consist of:
+  - Managing all page elements
+  - Managing event listeners
+  - Managing drawing to the canvas / output from the GOL object
 */
 function App(gol) {
+  // TBC : Self object for public methods / properties
   var self = { };
 
-  // TBC : Properties
+  // TBC : Public properties
   self.gol;
   self.elements = { };
   self.context = { };
-  //self.colors = { cell: 'yellow', background: 'black' };
   self.colors = {
     cell: {
       r: 255,
@@ -33,7 +34,7 @@ function App(gol) {
     }
   };
 
-  // TBC : Methods
+  // TBC : Map elements to formal object and setup context / vars
   self.initialize = function() {
     self.elements.btnNewGame        = $('#btn-newGame');
     self.elements.btnGameState      = $('#btn-gameState');
@@ -52,8 +53,10 @@ function App(gol) {
     self.bindEventHandlers();
   }
 
+  // TBC : Bind event handlers to page elements and operations
   self.bindEventHandlers = function() {
-    // TBC : New Game loads new game instance and starts it
+
+    // TBC : New Game loads new game instance and seeds it
     self.elements.btnNewGame.on('click', function() {
       self.gol = new GameOfLife();
 
@@ -65,7 +68,8 @@ function App(gol) {
       self.elements.btnGameState.setToStart();
     });
 
-    // TBC : Pause button should pause or resume game based on state
+    // TBC : Game state button logic changes on whether game is a 'new-game', the game is 'paused', or the game is 'running'
+    // TBC : This button should ultimately change the state of the game.
     self.elements.btnGameState.on('click', function() {
       if (self.gol.gameState === self.gol.GAME_STATES.NEW_GAME || self.gol.gameState === self.gol.GAME_STATES.PAUSED) {
         self.gol.run();
@@ -76,6 +80,7 @@ function App(gol) {
       }
     });
 
+    // TBC : Gather cell info for cell under mouse click and report details
     self.elements.canvas.on('click', function(event) {
       var canvasPosition = self.toCanvasPos(event.clientX, event.clientY);
 
@@ -94,12 +99,14 @@ function App(gol) {
       self.selectGroupButton($(this));
     });
 
+    // TBC : When game is seeded, draw grid to canvas and report stats
     $(document).on('gol:seed', function() {
       self.clearCanvas();
       self.drawLivingCells();
       self.reportStats();
     });
 
+    // TBC : When game ticks, draw grid to canvas and report stats
     $(document).on('gol:tick', function() {
       self.clearCanvas();
       self.drawLivingCells();
@@ -107,21 +114,23 @@ function App(gol) {
     });
   }
 
+  // TBC : Draw GOL grid to canvas
   self.drawLivingCells = function() {
     var cellOffset = 0,
         size = self.getSize();
 
-    if (size !== 1) {
-      cellOffset = size / 5;
-    }
+    // TBC : Offset creates a slight gap between cells.
+    cellOffset = size / 5;
 
     self.context.beginPath();
     self.gol.eachCell(function(cell) {
       var color = self.clone(self.colors.cell);
 
+      // TBC : Subtract the green from the yellow, leading to a redder color as cell ages
       color.g -= cell.age;
       self.context.fillStyle = self.toRGBAString(color);
 
+      // TBC : Draw if alive
       if(cell.isAlive()) {
         self.context.fillRect(
           cell.position.col * size + cellOffset,
@@ -134,11 +143,13 @@ function App(gol) {
     self.context.closePath();
   }
 
+  // TBC : clear canvas
   self.clearCanvas = function() {
     self.context.fillStyle = self.toRGBAString(self.colors.background);
     self.context.clearRect(0, 0, self.elements.canvas[0].width, self.elements.canvas[0].height);
   }
 
+  // TBC : Write stats to stats table
   self.reportStats = function() {
     self.elements.statsTable.empty();
     for(key in self.gol.stats) {
@@ -146,6 +157,7 @@ function App(gol) {
           label = self.gol.stats[key].label,
           value = self.gol.stats[key].value;
 
+      // TBC : Add thousands seperator if number
       if (typeof value === 'number') {
         value = value.toLocaleString();
       }
@@ -156,6 +168,7 @@ function App(gol) {
     }
   }
 
+  // TBC : Write cell details to cell details table
   self.reportCellDetails = function(cell, canvasPosition) {
     self.elements.cellDetailsTable.empty();
 
@@ -194,6 +207,7 @@ function App(gol) {
     }
   }
 
+  // TBC : 'Select' the button in the button group that was clicked
   self.selectGroupButton = function(button) {
     var btnGroup = button.closest('.button-group');
     var selected = btnGroup.find('.selected');
@@ -202,6 +216,7 @@ function App(gol) {
     button.addClass('selected');
   }
 
+  // TBC : Map mouse coordinates to canvas coords
   self.toCanvasPos = function(x, y) {
     var canvasBoundary = self.elements.canvas[0].getBoundingClientRect();
 
@@ -211,6 +226,7 @@ function App(gol) {
     }
   }
 
+  // TBC : Map canvas coordinates to cell location in grid
   self.toGridPos = function(x, y) {
     return {
       row: Math.floor(y / self.getSize()),
@@ -218,24 +234,30 @@ function App(gol) {
     }
   }
 
+  // TBC : Convert 'color' object to rgba string
   self.toRGBAString = function(color) {
     return 'RGBA(' + color.r + ',' + color.g + ',' + color.b + ',' + color.a + ')';
   }
 
+  // TBC : Deep copy an element
   self.clone = function(o) {
+    // TBC : Call constructor of original object to create a new copy
     var copy = o.constructor();
+
+    // TBC : Map all properties and values of original to copy
     for (var key in o) {
         if (o.hasOwnProperty(key)) copy[key] = o[key];
     }
     return copy;
   }
 
-  // TBC : Getters / Setters
+  // TBC : Get interval from selected DOM element
   self.getInterval = function() {
     var selected = self.elements.btnGroupInterval.find('.selected');
     return Number.parseInt(selected.data('interval'));
   }
 
+  // TBC : Get size from selected DOM element
   self.getSize = function() {
     var selected = self.elements.btnGroupSize.find('.selected');
     return Number.parseInt(selected.data('size'));
@@ -287,6 +309,7 @@ function GameOfLife() {
     }
   }
 
+  // TBC : Utility method to iterate through valid section of array (inside dead border) and execute callback
   self.eachCell = function(callback) {
     for (var i = 1; i < self.size - 1; i++) {
       for (var j = 1; j < self.size - 1; j++) {
@@ -296,7 +319,10 @@ function GameOfLife() {
     }
   }
 
+  // TBC : Initial seed of game
   self.seed = function(options) {
+
+    // TBC : Setup properties based on configurable options
     self.size = options.size || DEFAULT_SIZE;
     self.interval = options.interval || DEFAULT_INTERVAL;
     self.cellGenerationChance = options.cellGenerationChance || DEFAULT_PERCENT_CELL_GENERATION_CHANCE;
@@ -330,28 +356,34 @@ function GameOfLife() {
     $(document).trigger('gol:seed');
   }
 
+  // TBC : Randomize cell state based on 'cellGenerationChance'
   self.randomizeInitialCellState = function(cell) {
     var random = Math.floor(Math.random() * 100);
     random < self.cellGenerationChance ? cell.live() : cell.die();
   }
 
+  // TBC : Setup and run game loop, change game state to 'RUNNING'
   self.run = function() {
     self.gameState = self.GAME_STATES.RUNNING
     self.intervalId = setInterval(self.tick, self.interval);
   }
 
+  // TBC : Pause game
   self.pause = function() {
     self.gameState = self.GAME_STATES.PAUSED;
     clearInterval(self.intervalId);
   }
 
+  // TBC : Iterate one generation of simulation
   self.tick = function() {
     self.stats.livingCells.value = 0;
-    
+
+    // TBC : Update all cells based on their calculated 'Next State'
     self.eachCell(function(cell){
       self.updateCellState(cell);
     });
 
+    // TBC : Determine each cell's next state based on neighbors
     self.eachCell(function(cell){
       self.determineNextCellState(cell);
     });
@@ -360,6 +392,7 @@ function GameOfLife() {
     $(document).trigger('gol:tick');
   }
 
+  // TBC : Return list of neighbor cells
   self.getCellNeighbors = function(cell) {
     var p = cell.position,
         neighbors = [];
@@ -376,6 +409,7 @@ function GameOfLife() {
     return neighbors;
   }
 
+  // TBC : Set current state based on future state and calcuate livingCells
   self.updateCellState = function(cell) {
     if (cell.isAlive() && cell.doesLiveNext()) {
        cell.incrementAge();
@@ -388,6 +422,7 @@ function GameOfLife() {
     }
   }
 
+  // TBC : Determine next state based on neighbors and rules ( implemented as B3S23 )
   self.determineNextCellState = function(cell) {
     var neighbors = self.getCellNeighbors(cell),
         count = 0;
@@ -412,10 +447,7 @@ function GameOfLife() {
 }
 
 /*
-  TBC : The Cell object will be an object that serves as a dependency to the GameOfLife object.
-
-  Cell's have certain properties and behaviors that will be encapsulated in
-  this class of objects.
+  TBC : The Cell object will represent the data for a single cell in the GOL grid
 */
 function Cell() {
   var self = { };
@@ -427,23 +459,31 @@ function Cell() {
   self.state = self.STATES.DEAD;
   self.nextState = self.STATES.DEAD;
 
+  // TBC : Return true if cell is currently living
   self.isAlive = function() { return (self.state === self.STATES.ALIVE) ? true : false }
 
+  // TBC : Return true if cell is going to be ALIVE in the next generation
   self.doesLiveNext = function() { return (self.nextState === self.STATES.ALIVE) ? true : false }
 
+  // TBC : Set current state as ALIVE
   self.live = function() { self.state = self.STATES.ALIVE; }
 
+  // TBC : Set next state to ALIVE
   self.liveNext = function() { self.nextState = self.STATES.ALIVE; }
 
+  // TBC : Set next state to DEAD
   self.dieNext = function() { self.nextState = self.STATES.DEAD; }
 
+  // TBC : Set current state to DEAD and reset cell age
   self.die = function() {
     self.state = self.STATES.DEAD;
     self.resetAge();
   }
 
+  // TBC : Bump age by 1
   self.incrementAge = function() { self.age++; }
 
+  // TBC : Reset age to 0
   self.resetAge = function() { self.age = 0; }
 
   return self;

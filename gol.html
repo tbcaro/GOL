@@ -5,6 +5,10 @@
       Author: Travis Caro
       Description:
 
+      Conway's GOL is a graphical simulation demonstrating behaviors of programmed cellular automata that follow a set
+      of defined rules. This implementation follows the B3S23 rule scheme and includes features for adjusting game variables
+      as well as reporting statistics and cell details. It also includes logic for cellular aging changing color of cell
+      gradually.
     -->
 
     <meta charset="utf-8">
@@ -76,9 +80,12 @@
           </div>
 
         </div>
+
+        <!-- Canvas -->
         <div class="col-6 text-center">
           <canvas id="canvas" width="600" height="600"></canvas>
         </div>
+
         <div class="col-3">
           <!-- Game Statistics -->
           <div class="grid-row">
