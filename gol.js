@@ -119,7 +119,7 @@ function App(gol) {
     self.gol.eachCell(function(cell) {
       var color = self.clone(self.colors.cell);
 
-      color.g -= cell.age * 3;
+      color.g -= cell.age;
       self.context.fillStyle = self.toRGBAString(color);
 
       if(cell.isAlive()) {
@@ -271,7 +271,6 @@ function GameOfLife() {
   self.gameState = self.GAME_STATES.NEW_GAME;
 
   self.rows = [];
-  self.livingCells = { };
   self.intervalId;
   self.stats = {
     generations: {
@@ -347,6 +346,8 @@ function GameOfLife() {
   }
 
   self.tick = function() {
+    self.stats.livingCells.value = 0;
+    
     self.eachCell(function(cell){
       self.updateCellState(cell);
     });
@@ -376,12 +377,14 @@ function GameOfLife() {
   }
 
   self.updateCellState = function(cell) {
-    self.stats.livingCells.value = 0;
-    if (cell.isAlive()) {
-      cell.doesLiveNext() ? cell.incrementAge() : cell.die();
-      self.stats.livingCells.value++;
+    if (cell.isAlive() && cell.doesLiveNext()) {
+       cell.incrementAge();
+       self.stats.livingCells.value++;
     } else if (cell.doesLiveNext()){
       cell.live();
+      self.stats.livingCells.value++;
+    } else {
+      cell.die();
     }
   }
 
